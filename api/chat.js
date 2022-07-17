@@ -1,5 +1,6 @@
 
 var fs = require ('fs');
+var path = require ('path');
 var express = require ('express');
 var { extractValueFromCookie, setCookieIfNotFound } = require ('./utils');
 
@@ -24,7 +25,14 @@ app.get ('/', (req, res) => {
       currentUserId++;
    }
 
-   let file = fs.readFileSync('./index_chat.htm', 'utf-8');
+   // This little shinanigan is to make filesystem robust 
+   // To "node" execution path, since "." is not relative to current file
+   // But to "node" execution path in terminal, which can mess up complex
+   // Configuration in "package.json"
+   let relativePath = '../public/index.htm';
+   let pathToHtmlFile = path.normalize (`${__dirname}/${relativePath}`);
+   console.log (__filename)
+   let file = fs.readFileSync(pathToHtmlFile, 'utf-8');
    // fs.readFile('./index_chat.htm', 'utf-8', (error, data) => {
    //    file = data;
    //    console.log (data);

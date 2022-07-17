@@ -1,7 +1,7 @@
 # ChatRoom
 
 A simple client-server chat application made with NodeJs.
-This version use http connection rather tan socket, which is not suited for this use case.
+This version use http connection rather than socket, which is not suited for this use case.
 In a future iteration, I will implement it with socket, but for now I need to learn the basic of NodeJs, therefore let's tone  down the difficulty.
 
 ## Installation

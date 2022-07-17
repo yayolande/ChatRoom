@@ -4,7 +4,7 @@
   "description": "Simple NodeJs chat web app",
   "main": "chat.js",
   "scripts": {
-    "start" : "node chat.js",
+    "start" : "node api/chat.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Steve Djumo",
