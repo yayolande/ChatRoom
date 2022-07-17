@@ -1,0 +1,15 @@
+{
+  "name": "chatroom",
+  "version": "1.0.0",
+  "description": "Simple NodeJs chat web app",
+  "main": "chat.js",
+  "scripts": {
+    "start" : "node chat.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Steve Djumo",
+  "license": "ISC",
+  "dependencies": {
+     "express": "^4.18.1"
+  }
+}

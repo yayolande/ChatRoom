@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Chat App Server</title>
+<style>
+</style>
+</head>
+<body>
+
+   <div align="center">
+      <p id="messages">MESSAGES</p>
+      <p>Chat box</p>
+      <input id="userInput" type="text">
+      <button id="sendButton">Send</button>
+   </div>
+   
+</body>
+   <script>
+      let button = document.getElementById ("sendButton");
+      let userInput = document.getElementById ("userInput");
+      let chatMessage = document.getElementById ("messages");
+      const urlBase = document.URL;
+      const urlFullPath = `${urlBase}api/messages`;
+
+      button.addEventListener ('click', postMessagesToServer(event));
+      userInput.addEventListener ('keyup', (event) => {
+         if (event.key === "Enter")
+            postMessagesToServer(event);
+      });
+      
+      async function postMessagesToServer (event) {
+         let val = userInput.value;
+         userInput.value = "";
+         console.log('value from input : ', val);
+
+         let messagesJson = undefined;
+         let args = { 
+            method: 'POST',
+            headers : { 'content-type': 'application/json' },
+            credentials: 'include',
+            body : JSON.stringify({ sessionId: 1299, message: val })
+         };
+         
+         console.log ('args : ' + args);
+         await fetch(urlFullPath, args)
+            .then((response) => response.json())
+            .then((data) => { console.log('fetched data ', data); messagesJson = data; });
+
+         console.log (`Here is the messagesJson : ${messagesJson}`);
+         console.log (typeof messagesJson);
+
+         if (messagesJson) {
+            let str = "";
+
+            messagesJson.forEach ((el) => {
+               str += `<p>${el.message} -- UserId : ${el.userId}</p>`;
+            });
+            chatMessage.innerHTML = str;
+            console.log ('str : ', str);
+         }
+      }
+
+      // Not really useful as of late
+      function getMessagesFromServer (url) {
+         let messages;
+
+         fetch(url).
+            then((response) => response.json()).
+            then((data) => { 
+               console.log('messages [getMessagesFromServer] : ', data);
+               messages = data;
+            });
+
+         return messages;
+      }
+   </script>
+</html>
