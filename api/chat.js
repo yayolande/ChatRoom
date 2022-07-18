@@ -2,28 +2,32 @@
 var fs = require ('fs');
 var path = require ('path');
 var express = require ('express');
-var { extractValueFromCookie, setCookieIfNotFound } = require ('./utils');
+var { extractValueFromCookie, setCookieNewUser, setNewChatUser, mapToString } = require ('./utils');
 
 var app = express();
 app.use (express.json());
 
+// let names = ['GreatSayaMan', 'CrocoPops', 'Ben', 'Rambo', 'Mr. Beans', 'SamSam', 'Kyron'];
+// let poolNames = new Set();
 const cookieInitialValue = 1000;
-const cookieName = 'sessionId';
-let currentUserId = cookieInitialValue;
+let serverInitialConfig = {
+   currentUserId: cookieInitialValue,
+   cookieSessionName: 'sessionId',
+   names: ['GreatSayaMan', 'CrocoPops', 'Ben', 'Rambo', 'Mr. Beans', 'SamSam', 'Kyron'],
+   poolOfUsedNames: new Set(),
+   userNameIdTable: new Map()
+};
+
+const cookieName = serverInitialConfig.cookieSessionName;
+let currentUserId = serverInitialConfig.currentUserId;
 let messages = [];
 
 app.get ('/', (req, res) => {
    let cookies = req.get ('Cookie');
-   let cookieValue = "";
 
-   // if cookie is empty, set a new one
-   if (cookies) {
-      cookieValue = extractValueFromCookie (cookies, cookieName);
-   } else {
-      let options = { expires: new Date(Date.now() + 999999) };
-      res.cookie (cookieName, currentUserId.toString());
-      currentUserId++;
-   }
+   let cookieValueSessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig);
+   if (!cookieValueSessionId)
+      cookieValueSessionId = setNewChatUser (serverInitialConfig, res);
 
    // This little shinanigan is to make filesystem robust 
    // To "node" execution path, since "." is not relative to current file
@@ -31,14 +35,8 @@ app.get ('/', (req, res) => {
    // Configuration in "package.json"
    let relativePath = '../public/index.htm';
    let pathToHtmlFile = path.normalize (`${__dirname}/${relativePath}`);
-   console.log (__filename)
    let file = fs.readFileSync(pathToHtmlFile, 'utf-8');
-   // fs.readFile('./index_chat.htm', 'utf-8', (error, data) => {
-   //    file = data;
-   //    console.log (data);
-   // });
 
-   let str = `cookie value : ${cookieValue} === cookies : ${cookies}`;
    res.status(200);
    res.send (file);
 });
@@ -48,16 +46,23 @@ app.get ('/api/messages', (req, res) => {
 });
 
 app.post ('/api/messages', (req, res) => {
+   console.log ('=======================================');
    let body = req.body;
-   let cookieValue = extractValueFromCookie (req.get('cookie'), cookieName);
-   cookieValue = setCookieIfNotFound (cookieValue, res);
-   console.log (`Value of the cookie sent => req.cookies : ${req.cookies}`);
+   let cookieValueSessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig);
+   if (!cookieValueSessionId)
+      cookieValueSessionId = setNewChatUser (serverInitialConfig, res);
 
-   console.log ('req.body : ', body);
+   // console.log (`Value of the cookie sent => req.cookies : ${req.cookies}`);
+
+   // console.log ('req.body : ', body);
    if (!!body && body.message) {
-      messages.push ({ 'userId': cookieValue, 'message': body.message });
+      messages.push ({ 'userId': cookieValueSessionId, 'message': body.message });
    }
    
+   console.log (`all messages are : ${messages}`);
+   console.log (`all user Id & Name : ${mapToString (serverInitialConfig.userNameIdTable)}`);
+   console.log (`all the names already used (poolUsedname) : ${mapToString(serverInitialConfig.poolOfUsedNames)}`);
+   console.log ('=======================================');
    res.status(200).send(messages);
 });
 
