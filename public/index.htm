@@ -22,17 +22,28 @@
       let chatMessage = document.getElementById ("messages");
       const urlBase = document.URL;
       const urlFullPath = `${urlBase}api/messages`;
+      let currentEtag = "";
 
-      button.addEventListener ('click', postMessagesToServer(event));
+      
+      button.addEventListener ('click', (event) => {
+         postMessagesToServer(urlFullPath);
+      });
       userInput.addEventListener ('keyup', (event) => {
          if (event.key === "Enter")
-            postMessagesToServer(event);
+         postMessagesToServer(urlFullPath);
       });
+
+      // Refresh rate
+      let refreshRate = 2000;    // in milliseconds
+      setInterval(() => {
+         console.log ("REfreshing the browser's ELEMENT ... currentEtag = " + currentEtag);
+         getMessagesFromServer (urlFullPath)
+      }, refreshRate);
       
-      async function postMessagesToServer (event) {
+
+      async function postMessagesToServer (url) {
          let val = userInput.value;
          userInput.value = "";
-         console.log('value from input : ', val);
 
          let messagesJson = undefined;
          let args = { 
@@ -43,36 +54,60 @@
          };
          
          console.log ('args : ' + args);
-         await fetch(urlFullPath, args)
-            .then((response) => response.json())
+
+         let etag = "";
+         await fetch(url, args)
+            .then((response) => { etag = response.headers.get ('etag'); return response.json(); })
             .then((data) => { console.log('fetched data ', data); messagesJson = data; });
-
+            
+         console.log ('response headers -- Etag : ' + etag);
+         
+         if (currentEtag === etag)  return ;
          console.log (`Here is the messagesJson : ${messagesJson}`);
-         console.log (typeof messagesJson);
-
-         if (messagesJson) {
-            let str = "";
-
-            messagesJson.forEach ((el) => {
-               str += `<p>${el.message} -- UserId : ${el.userId}</p>`;
-            });
-            chatMessage.innerHTML = str;
-            console.log ('str : ', str);
-         }
+         
+         outputMessagesToElement (messagesJson, chatMessage);
+         currentEtag = etag;
       }
 
       // Not really useful as of late
-      function getMessagesFromServer (url) {
-         let messages;
+      async function getMessagesFromServer (url) {
+         let messagesJson = [];
+         let args = {
+            method: 'GET',
+            headers : {
+               'If-None-Match' : currentEtag
+            }
+         }
 
-         fetch(url).
-            then((response) => response.json()).
-            then((data) => { 
-               console.log('messages [getMessagesFromServer] : ', data);
-               messages = data;
+         await fetch(url, args)
+            .then((response) => {
+               etag = response.headers.get ('etag');
+               return response.json();
+            })
+            .then((data) => { 
+               messagesJson = data;
+            });
+         
+         console.log (`currentEtag = ${currentEtag} ; etag = ${etag}`);
+         if (currentEtag === etag)  return ;
+         console.log (`getMessagesFromServer() response message : ${messagesJson}`);
+            
+         outputMessagesToElement (messagesJson, chatMessage);
+         currentEtag = etag;
+      }
+
+      function outputMessagesToElement (messages, element) {
+         if (messages) {
+            let str = "";
+            messages.forEach ((el) => {
+               str += `<p>${el.message} -- UserId : ${el.userName}</p>`;
             });
 
-         return messages;
+            element.innerHTML = str;
+            console.log (str);
+         }
       }
+
+
    </script>
 </html>

@@ -52,8 +52,26 @@ function setNewChatUser (server, res) {
 
    let userId = setCookieNewUser (server, res);
    server.userNameIdTable.set (userId, userName);
+   console.log ('init new user : ' + userId + ' --> ' + userName);
 
    return userId;
+}
+
+function linkNameToMessages (messages, idNameTable) {
+   // let idNameTable = server.userNameIdTable;
+   let mappedMessages = [];
+   let name = "";
+
+   messages.forEach ((el) => {
+      name = idNameTable.get (parseInt(el.userId)) || "No Name 66";
+      // console.log("individual name of messages sender : " + idNameTable.get(el.userId));
+      mappedMessages.push ({
+         'userName': name,
+         'message': el.message
+      });
+   });
+
+   return mappedMessages;
 }
 
 function mapToString (map) {
@@ -70,5 +88,6 @@ module.exports = {
    extractValueFromCookie,
    setCookieNewUser,
    setNewChatUser,
+   linkNameToMessages,
    mapToString
 };

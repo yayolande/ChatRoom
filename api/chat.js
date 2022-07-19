@@ -2,7 +2,7 @@
 var fs = require ('fs');
 var path = require ('path');
 var express = require ('express');
-var { extractValueFromCookie, setCookieNewUser, setNewChatUser, mapToString } = require ('./utils');
+var { extractValueFromCookie, setCookieNewUser, setNewChatUser, linkNameToMessages, mapToString } = require ('./utils');
 
 var app = express();
 app.use (express.json());
@@ -42,7 +42,9 @@ app.get ('/', (req, res) => {
 });
 
 app.get ('/api/messages', (req, res) => {
-   res.status(200).send(messages);
+   let mappedMessages = linkNameToMessages (messages, serverInitialConfig.userNameIdTable);
+
+   res.status(200).send(mappedMessages);
 });
 
 app.post ('/api/messages', (req, res) => {
@@ -58,12 +60,14 @@ app.post ('/api/messages', (req, res) => {
    if (!!body && body.message) {
       messages.push ({ 'userId': cookieValueSessionId, 'message': body.message });
    }
+
+   let mappedMessages = linkNameToMessages (messages, serverInitialConfig.userNameIdTable);
+   console.log (`MappedMessages : ${mappedMessages}`);
    
-   console.log (`all messages are : ${messages}`);
    console.log (`all user Id & Name : ${mapToString (serverInitialConfig.userNameIdTable)}`);
    console.log (`all the names already used (poolUsedname) : ${mapToString(serverInitialConfig.poolOfUsedNames)}`);
    console.log ('=======================================');
-   res.status(200).send(messages);
+   res.status(200).send(mappedMessages);
 });
 
 const port = process.env.PORT || 2200;
