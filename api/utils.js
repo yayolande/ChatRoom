@@ -2,12 +2,10 @@
 // Function definitions zone
 //
 
-function extractValueFromCookie (cookies, server) {
+function extractValueFromCookie (cookies, cookieName) {
    let indexSeparator = "";
    let cookieValue = "";
-   let cookieName = server.cookieSessionName;
 
-   // console.log ('cookies from extractValueFromCookie : ', cookies);
    if (!cookies)  return cookieValue;
    let arr = cookies.split(';');
 
@@ -17,7 +15,6 @@ function extractValueFromCookie (cookies, server) {
          indexSeparator = el.indexOf('=');
          el = el.slice(indexSeparator + 1);
          cookieValue = el;
-         // console.log ('cookie ', cookieName, ' = ', el);
       }
    });
    return cookieValue;
@@ -64,7 +61,6 @@ function linkNameToMessages (messages, idNameTable) {
 
    messages.forEach ((el) => {
       name = idNameTable.get (parseInt(el.userId)) || "No Name 66";
-      // console.log("individual name of messages sender : " + idNameTable.get(el.userId));
       mappedMessages.push ({
          'userName': name,
          'message': el.message

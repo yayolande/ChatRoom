@@ -25,7 +25,7 @@ let messages = [];
 app.get ('/', (req, res) => {
    let cookies = req.get ('Cookie');
 
-   let cookieValueSessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig);
+   let cookieValueSessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig.cookieName);
    if (!cookieValueSessionId)
       cookieValueSessionId = setNewChatUser (serverInitialConfig, res);
 
@@ -50,7 +50,7 @@ app.get ('/api/messages', (req, res) => {
 app.post ('/api/messages', (req, res) => {
    console.log ('=======================================');
    let body = req.body;
-   let cookieValueSessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig);
+   let cookieValueSessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig.cookieName);
    if (!cookieValueSessionId)
       cookieValueSessionId = setNewChatUser (serverInitialConfig, res);
 
@@ -62,13 +62,43 @@ app.post ('/api/messages', (req, res) => {
    }
 
    let mappedMessages = linkNameToMessages (messages, serverInitialConfig.userNameIdTable);
-   console.log (`MappedMessages : ${mappedMessages}`);
    
    console.log (`all user Id & Name : ${mapToString (serverInitialConfig.userNameIdTable)}`);
    console.log (`all the names already used (poolUsedname) : ${mapToString(serverInitialConfig.poolOfUsedNames)}`);
    console.log ('=======================================');
    res.status(200).send(mappedMessages);
 });
+
+app.get ('/api/names', (req, res) => {
+   res.status(200).send (Object.fromEntries (serverInitialConfig.userNameIdTable));
+});
+
+// app.post ('/api/names', (req, res) => {
+// });
+
+app.put ('/api/names', (req, res) => {
+   let sessionId = extractValueFromCookie (req.get('cookie'), serverInitialConfig.cookieName);
+   let userName = req.body.message;
+   let sessionIdNameTable = serverInitialConfig.userNameIdTable;
+   let poolUsedNames = serverInitialConfig.poolOfUsedNames;
+   sessionId = parseInt(sessionId);
+
+   let nameToDelete = sessionIdNameTable.get (sessionId);
+   console.log ('Name to delete is : ' + nameToDelete);
+
+   if (nameToDelete) {
+      sessionIdNameTable.set (sessionId, userName);
+      poolUsedNames.add (userName);
+      poolUsedNames.delete (nameToDelete);
+
+      // res.status(200).send(Object.fromEntries (sessionIdNameTable));
+      res.status(204).send();
+      return ;
+   }
+
+   res.status(400).send();
+});
+
 
 const port = process.env.PORT || 2200;
 app.listen (port, () => {
